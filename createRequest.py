@@ -1,29 +1,51 @@
 from request import Request
-
+import boto3
+import logging
+import json
 
 class CreateRequest(Request):
     def __init__(self, request_type, request_data):
         super().__init__(request_type, request_data)
+    def create_s3(self):
+        s3 = boto3.client('s3')
+        bucket_name = ''
+        widget_data = {
+            'widget_id': self.widget_id,
+            'owner': self.owner,
+            'label': self.label,
+            'description': self.description,
+            'other_attributes': self.other_attributes
+        }
+        try:
+            s3.put_object(Bucket=bucket_name, Key=f'widgets/{self.owner}/{self.widget_id}.json', Body=json.dumps(widget_data))
+            logging.info(f'Widget {self.widget_id} created in S3')
+        except Exception as e:
+            logging.error(f'Error creating widget in S3: {e}')
 
-    def fill_attributes(self, data):
-        # Parse JSON data specific to create request
-        # Additional logic for parsing create request attributes
-        pass
+    def create_dynamo(self):
+        dynamodb = boto3.resource('dynamodb')
+        table_name = ''
+        table = dynamodb.Table(table_name)
+
+        widget_item = {
+            'widget_id': self.widget_id,
+            'owner': self.owner,
+            'label': self.label,
+            'description': self.description,
+            'other_attributes': self.other_attributes
+        }
+
+        try:
+            table.put_item(Item=widget_item)
+            logging.info(f'Widget {self.widget_id} created in DynamoDB.')
+        except Exception as e:
+            logging.error(f'Error creating widget in DynamoDB: {e}')
 
     def do_operation(self):
-        # Implement logic for handling create operation
-        # For example, code to create a widget in the specified storage mechanism
-        print(f'Creating widget: {self.widget_id} for owner: {self.owner}')
+        if self.database_type == 's3':
+            self.create_s3()
+        elif self.database_type == 'dynamo':
+            self.create_dynamo()
+        else:
+            raise ValueError('Invalid database type')
 
-# Example usage of CreateRequest
-request_data = {
-    'requestId': '123',
-    'widgetId': '456',
-    'owner': 'Alice',
-    'label': 'Sample Widget',
-    'description': 'This is a test widget.'
-}
-
-create_request = CreateRequest('create', request_data)
-create_request.fill_attributes(request_data)
-create_request.do_operation()

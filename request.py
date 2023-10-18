@@ -1,4 +1,5 @@
 import json
+import logging
 
 class Request:
     def __init__(self, request_type, request_data):
@@ -8,12 +9,22 @@ class Request:
         self.owner = request_data.get('owner', '')
         self.label = request_data.get('label', '')
         self.description = request_data.get('description', '')
-        self.other_attributes = request_data.get('otherAttributes', '')
+        self.other_attributes = request_data.get('otherAttributes', [])
 
     def fill_attributes(self, data):
-        # Implement JSON parsing logic specific to the request data structure
-        pass
+        if 'otherAttributes' in data:
+            self.other_attributes = []
+            for attribute in data['otherAttributes']:
+                if 'name' in attribute and 'value' in attribute:
+                    parsed_attribute = {
+                        'name': attribute['name'],
+                        'value': attribute['value']
+                    }
+                    self.other_attributes.append(parsed_attribute)
+                else:
+                    logging.warning("There was an issue with the otherAttribute format in the request")
+        else:
+            logging.warning("otherAttributes key is missing. So sorry!")
 
     def do_operation(self):
-        # Abstract method, to be implemented by child classes
-        pass
+        pass #abstract method
