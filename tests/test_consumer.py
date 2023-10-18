@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from consumer import get_widget_request
+from main import get_widget_request
 
 class TestConsumer(unittest.TestCase):
 
