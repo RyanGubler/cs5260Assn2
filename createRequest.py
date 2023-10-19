@@ -7,9 +7,10 @@ class CreateRequest(Request):
     def __init__(self, request_type, request_data, database_type):
         super().__init__(request_type, request_data)
         self.database_type = database_type
+
     def create_s3(self):
         s3 = boto3.client('s3')
-        bucket_name = 'usu-cs-5260-goob-requests'
+        bucket_name = 'usu-cs5260-goob-dist'
         widget_data = {
             'request_id': self.request_id,
             'widget_id': self.widget_id,
@@ -19,7 +20,7 @@ class CreateRequest(Request):
             'other_attributes': self.other_attributes
         }
         try:
-            s3.put_object(Bucket=bucket_name, Key=f'widgets/{self.owner}/{self.widget_id}.json', Body=json.dumps(widget_data))
+            s3.put_object(Bucket=bucket_name, Key=f'widgets/{self.owner}/{self.widget_id}', Body=json.dumps(widget_data))
             logging.info(f'Widget {self.widget_id} created in S3')
         except Exception as e:
             logging.error(f'Error creating widget in S3: {e}')
@@ -31,7 +32,7 @@ class CreateRequest(Request):
 
         widget_item = {
             'request_id': self.request_id,
-            'widget_id': self.widget_id,
+            'id': self.widget_id,
             'owner': self.owner,
             'label': self.label,
             'description': self.description,
