@@ -1,46 +1,66 @@
 import os
 import json
+import argparse
 import logging
 import jsonschema
+import boto3
 from requestFactory import RequestFactory
 
 logging.basicConfig(filename='consumer.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
+def argument_parser():
+    parser = argparse.ArgumentParser(description='Process your widget requests with either S3 or DynamoDB.')
+    parser.add_argument('--database-type', choices=['s3', 'dynamo'], required=True, help='Specify the type of the database (s3 or dynamoDB)')
+    return parser.parse_args()
 class Consumer:
-    def __init__(self, schema_file):
-        self.sample_requests = 'sample-requests/'
+    def __init__(self, schema_file, input_bucket='usu-cs5260-goob-requests', output_bucket='usu-cs5260-goob-dist'):
+        self.s3 = boto3.client('s3')
         self.request_factory = RequestFactory()
+        self.input_bucket = input_bucket
+        self.output_bucket = output_bucket
         with open(schema_file, 'r') as schema_file:
             self.widget_request_schema = json.load(schema_file)
 
+    def get_s3_file_content(self, bucket_name, file_name):
+        try:
+            response = self.s3.get_object(Bucket=bucket_name, Key=file_name)
+            file_content = response['Body'].read().decode('utf-8')
+            widget_request_data = json.loads(file_content)
+            return widget_request_data
+        except Exception as e:
+            logging.error(f'Error getting file content from S3: {e}')
+            return None
+        
     def validate_widget_request(self, widget_request_data):
         try:
             jsonschema.validate(widget_request_data, self.widget_request_schema)
-            logging.info('Widget Request Successful')
             return True
         except jsonschema.exceptions.ValidationError as e:
-            logging.error(f'Widget Request Failure: {e}')
+            logging.error(e)
             return False
 
     def process_widget_requests(self, database_type):
-        for file in os.listdir(self.sample_requests):
-            file_path = os.path.join(self.sample_requests, file)
-            with open(file_path, 'r') as file_name:
-                try:
-                    widget_request_data = json.load(file_name)
-                except json.JSONDecodeError as e:
-                    logging.error(f'Error decoding JSON in file {file}')
-                    continue
+        try:
+            response = self.s3.list_objects_v2(Bucket=self.input_bucket, Prefix='sample-requests/')
+            for obj in response.get('Contents', []):
+                file_name = obj['Key']
+                widget_request_data = self.get_s3_file_content(self.input_bucket, file_name)
                 if self.validate_widget_request(widget_request_data):
                     request_instance = self.request_factory.create_request(database_type, widget_request_data['type'], widget_request_data)
                     request_instance.fill_attributes(widget_request_data)
                     request_instance.do_operation()
+                    output_key = f'processed/{os.path.basename(file_name)}'
+                    self.s3.put_object(Body=json.dumps(widget_request_data), Bucket=self.output_bucket, Key=output_key)
+                    logging.info(f'Processed data uploaded to {output_key}')
+        except Exception as e:
+            logging.error(f'Error processing widget requests: {e}')
+
 
 def main():
+    args = argument_parser()
+    database_type = args.database_type
     schema_file = 'widgetRequest-schema.json'
     consumer = Consumer(schema_file)
-    database_type = input("Which storage system do you want to use? (s3 or dynamo) I am assuming you will use good input: ")
     consumer.process_widget_requests(database_type)
 
 if __name__ == '__main__':

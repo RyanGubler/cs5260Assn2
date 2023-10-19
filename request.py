@@ -24,7 +24,7 @@ class Request:
                 else:
                     logging.warning("There was an issue with the otherAttribute format in the request")
         else:
-            logging.warning("otherAttributes key is missing. So sorry!")
+            logging.warning("There were no otherAttributes here")
 
     def do_operation(self):
         pass #abstract method

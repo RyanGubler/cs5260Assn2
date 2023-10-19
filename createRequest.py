@@ -12,8 +12,8 @@ class CreateRequest(Request):
         s3 = boto3.client('s3')
         bucket_name = 'usu-cs5260-goob-dist'
         widget_data = {
+            'id': self.widget_id,
             'request_id': self.request_id,
-            'widget_id': self.widget_id,
             'owner': self.owner,
             'label': self.label,
             'description': self.description,
@@ -31,8 +31,8 @@ class CreateRequest(Request):
         table = dynamodb.Table(table_name)
 
         widget_item = {
-            'request_id': self.request_id,
             'id': self.widget_id,
+            'request_id': self.request_id,
             'owner': self.owner,
             'label': self.label,
             'description': self.description,
