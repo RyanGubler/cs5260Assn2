@@ -1,4 +1,3 @@
-import json
 from createRequest import CreateRequest
 from updateRequest import UpdateRequest
 from deleteRequest import DeleteRequest
