@@ -67,7 +67,7 @@ def main():
     producer_bucket = args.producer_bucket
     consumer_bucket = args.consumer_bucket
     schema_file = 'widgetRequest-schema.json'
-    consumer = Consumer(schema_file, database_type,producer_bucket, consumer_bucket)
+    consumer = Consumer(schema_file, database_type, producer_bucket, consumer_bucket)
     consumer.process_widget_requests()
 
 if __name__ == '__main__':
