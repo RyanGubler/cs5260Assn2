@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch, Mock
 from main import Consumer
 from createRequest import CreateRequest
 from requestFactory import RequestFactory
