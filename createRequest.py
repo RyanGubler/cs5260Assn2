@@ -4,9 +4,10 @@ import logging
 import json
 
 class CreateRequest(Request):
-    def __init__(self, request_type, request_data, database_type):
+    def __init__(self, request_type, request_data, database_type, consumer_bucket):
         super().__init__(request_type, request_data)
         self.database_type = database_type
+        self.consumer_bucket = consumer_bucket
 
     def create_s3(self):
         s3 = boto3.client('s3')
@@ -19,7 +20,7 @@ class CreateRequest(Request):
             'other_attributes': self.other_attributes
         }
         try:
-            s3.put_object(Bucket=self.bucket_name, Key=f'widgets/{self.owner}/{self.widget_id}', Body=json.dumps(widget_data))
+            s3.put_object(Bucket=self.consumer_bucket, Key=f'widgets/{self.owner}/{self.widget_id}', Body=json.dumps(widget_data))
             logging.info(f'Widget {self.widget_id} created in S3')
         except Exception as e:
             logging.error(f'Error creating widget in S3: {e}')

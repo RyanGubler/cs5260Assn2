@@ -4,6 +4,7 @@ import argparse
 import logging
 import jsonschema
 import boto3
+import sys
 from requestFactory import RequestFactory
 
 logging.basicConfig(filename='consumer.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -51,7 +52,7 @@ class Consumer:
                     file_name = obj['Key']
                     widget_request_data = self.get_s3_file_content(self.producer_bucket, file_name)
                     if self.validate_widget_request(widget_request_data):
-                        request_instance = self.request_factory.create_request(self.database_type, widget_request_data['type'], widget_request_data)
+                        request_instance = self.request_factory.create_request(self.database_type, widget_request_data['type'], widget_request_data, self.consumer_bucket)
                         request_instance.fill_attributes(widget_request_data)
                         request_instance.do_operation()
                         output_key = f'processed/{os.path.basename(file_name)}'
@@ -62,13 +63,17 @@ class Consumer:
 
 
 def main():
-    args = argument_parser()
-    database_type = args.database_type
-    producer_bucket = args.producer_bucket
-    consumer_bucket = args.consumer_bucket
-    schema_file = 'widgetRequest-schema.json'
-    consumer = Consumer(schema_file, database_type, producer_bucket, consumer_bucket)
-    consumer.process_widget_requests()
+    try:
+        args = argument_parser()
+        database_type = args.database_type
+        producer_bucket = args.producer_bucket
+        consumer_bucket = args.consumer_bucket
+        schema_file = 'widgetRequest-schema.json'
+        consumer = Consumer(schema_file, database_type, producer_bucket, consumer_bucket)
+        consumer.process_widget_requests()
+    except KeyboardInterrupt:
+        print(" Exiting program")
+        sys.exit(0)
 
 if __name__ == '__main__':
     main()
