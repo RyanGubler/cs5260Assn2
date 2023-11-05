@@ -9,8 +9,8 @@ class TestConsumer(unittest.TestCase):
     def test_schema(self):
         self.schema_file = 'widgetRequest-schema.json'
 
-        self.consumer = Consumer(self.schema_file, 's3')
-        self.consumer = Consumer(self.schema_file, 'dynamo')
+        self.consumer = Consumer(self.schema_file, 's3', '', '', '')
+        self.consumer = Consumer(self.schema_file, 'dynamo', '','','')
     
     def test_storage_types(self):
         schema_file = 'widgetRequest-schema.json'
@@ -18,9 +18,10 @@ class TestConsumer(unittest.TestCase):
         output_bucket = 'usu-cs5260-goob-dist'
         storage_type_s3 = 's3'
         storage_type_dynamo = 'dynamo'
-        consumer_s3 = Consumer(schema_file, storage_type_s3, input_bucket, output_bucket)
+        storage_type_sqs = 'sqs'
+        consumer_s3 = Consumer(schema_file, storage_type_s3, input_bucket, output_bucket, storage_type_sqs)
         self.assertEqual(consumer_s3.database_type, storage_type_s3)
-        consumer_dynamo = Consumer(schema_file, storage_type_dynamo, input_bucket, output_bucket)
+        consumer_dynamo = Consumer(schema_file, storage_type_dynamo, input_bucket, output_bucket, storage_type_sqs)
         self.assertEqual(consumer_dynamo.database_type, storage_type_dynamo)
 
 class TestRequestFactory(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestRequestFactory(unittest.TestCase):
         request_data = {
             'type': 'create',
         }
-        request_instance = self.factory.create_request(database_type, request_type, request_data)
+        request_instance = self.factory.create_request(database_type, request_type, request_data, '', '')
         self.assertIsInstance(request_instance, CreateRequest)
         self.assertEqual(request_instance.database_type, database_type)
 
