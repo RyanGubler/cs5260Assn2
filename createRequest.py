@@ -4,10 +4,12 @@ import logging
 import json
 
 class CreateRequest(Request):
-    def __init__(self, request_type, request_data, database_type, consumer_bucket):
+    def __init__(self, request_type, request_data, database_type, consumer_bucket, sqs=None):
         super().__init__(request_type, request_data)
         self.database_type = database_type
         self.consumer_bucket = consumer_bucket
+        self.sqs = sqs
+
 
     def create_s3(self):
         s3 = boto3.client('s3')
@@ -45,6 +47,22 @@ class CreateRequest(Request):
         except Exception as e:
             logging.error(f'Error creating widget in DynamoDB: {e}')
 
+    def create_sqs(self):
+        sqs = boto3.client('sqs')
+        widget_data = {
+            'id': self.widget_id,
+            'request_id': self.request_id,
+            'owner': self.owner,
+            'label': self.label,
+            'description': self.description,
+            'other_attributes': self.other_attributes
+        }
+        try:
+            sqs.send_message(QueueUrl=self.sqs_queue_url, MessageBody=json.dumps(widget_data))
+            logging.info(f'Widget {self.widget_id} sent to SQS queue.')
+        except Exception as e:
+            logging.error(f'Error sending widget to SQS queue: {e}')
+            
     def do_operation(self):
         if self.database_type == 's3':
             print("creating widget in S3")
@@ -52,6 +70,8 @@ class CreateRequest(Request):
         elif self.database_type == 'dynamo':
             print("Creating widget in DynamoDB")
             self.create_dynamo()
+        elif self.database_type == 'sqs':
+            self.create_sqs()
         else:
             raise ValueError('Invalid database type')
 

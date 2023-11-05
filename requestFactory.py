@@ -2,12 +2,12 @@ from createRequest import CreateRequest
 from updateRequest import UpdateRequest
 from deleteRequest import DeleteRequest
 class RequestFactory:
-    def create_request(self, database_type, request_type, request_data, consumer_bucket):
+    def create_request(self, database_type, request_type, request_data, consumer_bucket, sqs=None):
         if request_type == 'create':
-            return CreateRequest(request_type, request_data, database_type, consumer_bucket)
+            return CreateRequest(request_type, request_data, database_type, consumer_bucket, sqs)
         elif request_type == 'update':
-            return UpdateRequest(request_type, request_data, database_type)
+            return UpdateRequest(request_type, request_data, database_type, consumer_bucket)
         elif request_type == 'delete':
-            return DeleteRequest(request_type, request_data, database_type)
+            return DeleteRequest(request_type, request_data, database_type, consumer_bucket)
         else:
             raise ValueError('Invalid request type')
