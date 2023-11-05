@@ -65,7 +65,7 @@ class Consumer:
                         self.sqs.delete_message(QueueUrl=self.queue_url, ReceiptHandle=message['ReceiptHandle'])
                         logging.info(f'Processed message {message["MessageId"]} from SQS.')
                     except Exception as e:
-                        logging.error(f'Error processing widget requests: {e}')
+                        logging.error(f'Error processing widget requests: {e} \n Type is: {self.database_type}')
 
             elif(self.database_type == 's3' or self.database_type == 'dynamo'):
                 try:

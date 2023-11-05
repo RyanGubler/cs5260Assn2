@@ -4,7 +4,7 @@ import logging
 import json
 
 class CreateRequest(Request):
-    def __init__(self, request_type, request_data, database_type, consumer_bucket, sqs=None):
+    def __init__(self, request_type, request_data, database_type, consumer_bucket, sqs):
         super().__init__(request_type, request_data)
         self.database_type = database_type
         self.consumer_bucket = consumer_bucket
@@ -74,5 +74,5 @@ class CreateRequest(Request):
             print("Creating widget from SQS")
             self.create_sqs()
         else:
-            raise ValueError('Invalid database type')
+            raise ValueError(f'Invalid database type: {self.database_type}')
 
